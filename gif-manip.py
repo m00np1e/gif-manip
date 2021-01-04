@@ -40,6 +40,139 @@ def check_args():
     return (args1)
 
 
+# check that arguments are supplied
+def error_check(infile, spinfile, speed, what, direction):
+    if not infile:
+        logo()
+        print("Input file not provided: use -i")
+        exit(1)
+    if not spinfile:
+        logo()
+        print("Output file not provided: use -o")
+        exit(1)
+    if not speed:
+        logo()
+        print("Give me some speed: use -s")
+        exit(1)
+    if not what:
+        logo()
+        print("What type yo: use -t")
+        exit(1)
+    if not direction:
+        logo()
+        print("Need direction: use -d")
+        exit(1)
+
+
+# what are we going to do with this image
+def check_type(type):
+    if type == "flip":
+        return type
+    elif type == "strobe-red":
+        return type
+    elif type == "strobe-orange":
+        return type
+    elif type == "strobe-yellow":
+        return type
+    elif type == "spin-cc":
+        return type
+    else:
+        return type
+
+
+# open file and get image
+def open_file(option, what):
+    try:
+        logo()
+        if what == "flip":
+            doing = "flipping."
+        elif (what == "spin-c") or (what == "spin-cc"):
+            doing = "spinning."
+        else:
+            doing = "strobing."
+        image_open = Image.open(option, 'r')
+        print("Opened", option, "for", doing)
+        if (image_open.height < 512) or (image_open.width < 512):
+            print("WARNING: Image smaller than 512x512. The", (doing[:-1]), "may look weird.")
+        if image_open.format == "PNG":
+            bg_color = (255, 255, 255)
+            rgb_img = rem_trans(image_open, bg_color)
+            return (rgb_img)
+        else:
+            image_open = image_open.convert("P", palette=Image.ADAPTIVE, colors=256)
+            return image_open
+    except IOError:
+        print("Error: Cannot open input file for reading or input file not found.")
+    exit(1)
+
+
+# figure out what to do
+def get_manip(picture, what_do, things):
+    # probably a better way to do this
+    if what_do == "spin-c":
+        spin_clockwise(picture, (things.i), (things.s), (things.o))
+    elif what_do == "spin-cc":
+        spin_counterclockwise(picture, (things.i), (things.s), (things.o))
+    elif what_do == "flip":
+        flippity_flip(picture, (things.i), (things.s), (things.o))
+    elif what_do == "strobe-red" and (things.d) == "c":
+        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "red")
+    elif what_do == "strobe-red" and (things.d) == "cc":
+        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "red")
+    elif what_do == "strobe-orange" and (things.d) == "c":
+        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "orange")
+    elif what_do == "strobe-orange" and (things.d) == "cc":
+        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "orange")
+    elif what_do == "strobe-yellow" and (things.d) == "c":
+        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "yellow")
+    elif what_do == "strobe-yellow" and (things.d) == "cc":
+        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "yellow")
+    else:
+        print("I don't know what you're trying to do.")
+        exit(1)
+
+
+# logos
+def logo():
+    print("""\
+   ________________   __  ___            _     
+  / ____/  _/ ____/  /  |/  /___ _____  (_)___ 
+ / / __ / // /_     / /|_/ / __ `/ __ \/ / __ \\
+/ /_/ // // __/    / /  / / /_/ / / / / / /_/ /
+\____/___/_/      /_/  /_/\__,_/_/ /_/_/ .___/ 
+                                      /_/      """)
+
+
+def logo_flip():
+    print("""\
+    _________          __  __          __     ________________
+   / ____/ (_)___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
+  / /_  / / / __ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
+ / __/ / / / /_/ /  / /_/ / / / /_/ / /_   / /_/ // // __/    
+/_/   /_/_/ .___/   \__/_/ /_/\__,_/\__/   \____/___/_/       
+         /_/                                                  """)
+
+
+def logo_spin():
+    print("""\
+   _____       _          __  __          __     ________________
+  / ___/____  (_)___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
+  \__ \/ __ \/ / __ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
+ ___/ / /_/ / / / / /  / /_/ / / / /_/ / /_   / /_/ // // __/    
+/____/ .___/_/_/ /_/   \__/_/ /_/\__,_/\__/   \____/___/_/       
+    /_/                                                          """)
+
+
+def logo_strobe():
+    print("""\
+   _____ __             __            __  __          __     ________________
+  / ___// /__________  / /_  ___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
+  \__ \/ __/ ___/ __ \/ __ \/ _ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
+ ___/ / /_/ /  / /_/ / /_/ /  __/  / /_/ / / / /_/ / /_   / /_/ // // __/    
+/____/\__/_/   \____/_.___/\___/   \__/_/ /_/\__,_/\__/   \____/___/_/       
+                                                                             """)
+
+
 # resize image to 512x512, maintaining aspect ratio and quality
 # resize to anything smaller than this and there is quality loss
 # if the image is smaller than 512x512, it will not resize
@@ -85,7 +218,7 @@ def counterclockwise(cc_image):
 # spin the image clockwise and save
 def spin_clockwise(image, infile, speed, spinfile):
     logo_spin()
-    print("Spinning", infile, "clockwise with speed = ", speed)
+    print("Spinning", infile, "clockwise with speed =", str(speed)+".")
     resized = resize_image(image)
     clockwised = clockwise(resized)
     try:
@@ -102,7 +235,7 @@ def spin_clockwise(image, infile, speed, spinfile):
 # spin the image counterclockwise and save
 def spin_counterclockwise(image, infile, speed, spinfile):
     logo_spin()
-    print("Spinning", infile, "counterclockwise with speed = ", speed)
+    print("Spinning", infile, "counterclockwise with speed =", str(speed)+".")
     resized = resize_image(image)
     ccwised = counterclockwise(resized)
     try:
@@ -120,7 +253,7 @@ def strobe_spin_clockwise(image, infile, speed, spinfile, flash):
     resized = resize_image(image)
     clockwised = clockwise_strobe(resized, flash)
     logo_strobe()
-    print("Spinning", infile, "clockwise with speed = ", speed, "and strobing", flash)
+    print("Spinning", infile, "clockwise with speed =", speed, "and strobing", flash + ".")
     try:
         clockwised[0].save(spinfile, 'GIF', save_all=True, append_images=clockwised[1:],
                            duration=speed,
@@ -137,7 +270,7 @@ def strobe_spin_counterclockwise(image, infile, speed, spinfile, flash):
     resized = resize_image(image)
     ccwised = counterclockwise_strobe(resized, flash)
     logo_strobe()
-    print("Spinning", infile, "counterclockwise with speed = ", speed, "and strobing", flash)
+    print("Spinning", infile, "counterclockwise with speed =", speed, "and strobing", flash + ".")
     try:
         ccwised[0].save(spinfile, 'GIF', save_all=True, append_images=ccwised[1:], duration=speed,
                         loop=0,
@@ -146,108 +279,6 @@ def strobe_spin_counterclockwise(image, infile, speed, spinfile, flash):
     except IOError:
         print("Error: Cannot open output file for writing.")
         exit(1)
-
-
-# what are we going to do with this image
-def check_type(type):
-    if type == "flip":
-        return type
-    elif type == "strobe-red":
-        return type
-    elif type == "strobe-orange":
-        return type
-    elif type == "strobe-yellow":
-        return type
-    elif type == "spin-cc":
-        return type
-    else:
-        type == "spin-c"
-        return type
-
-
-# check that arguments are supplied
-def error_check(infile, spinfile, speed, what, direction):
-    if not infile:
-        logo()
-        print("Input file not provided: use -i")
-        exit(1)
-    if not spinfile:
-        logo()
-        print("Output file not provided: use -o")
-        exit(1)
-    if not speed:
-        logo()
-        print("Give me some speed: use -s")
-        exit(1)
-    if not what:
-        logo()
-        print("What type yo: use -t")
-        exit(1)
-    if not direction:
-        logo()
-        print("Need direction")
-        exit(1)
-
-
-# logos
-def logo():
-    print("""\
-   ________________   __  ___            _     
-  / ____/  _/ ____/  /  |/  /___ _____  (_)___ 
- / / __ / // /_     / /|_/ / __ `/ __ \/ / __ \\
-/ /_/ // // __/    / /  / / /_/ / / / / / /_/ /
-\____/___/_/      /_/  /_/\__,_/_/ /_/_/ .___/ 
-                                      /_/      """)
-
-
-def logo_flip():
-    print("""\
-    _________          __  __          __     ________________
-   / ____/ (_)___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
-  / /_  / / / __ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
- / __/ / / / /_/ /  / /_/ / / / /_/ / /_   / /_/ // // __/    
-/_/   /_/_/ .___/   \__/_/ /_/\__,_/\__/   \____/___/_/       
-         /_/                                                  """)
-
-
-def logo_spin():
-    print("""\
-   _____       _          __  __          __     ________________
-  / ___/____  (_)___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
-  \__ \/ __ \/ / __ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
- ___/ / /_/ / / / / /  / /_/ / / / /_/ / /_   / /_/ // // __/    
-/____/ .___/_/_/ /_/   \__/_/ /_/\__,_/\__/   \____/___/_/       
-    /_/                                                          """)
-
-
-def logo_strobe():
-    print("""\
-   _____ __             __            __  __          __     ________________
-  / ___// /__________  / /_  ___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
-  \__ \/ __/ ___/ __ \/ __ \/ _ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
- ___/ / /_/ /  / /_/ / /_/ /  __/  / /_/ / / / /_/ / /_   / /_/ // // __/    
-/____/\__/_/   \____/_.___/\___/   \__/_/ /_/\__,_/\__/   \____/___/_/       
-                                                                             """)
-
-
-# open file and get image
-def open_file(option):
-    try:
-        logo()
-        image_open = Image.open(option, 'r')
-        print("Opened", option, "for spinning, flipping, or strobing.")
-        if (image_open.height < 512) or (image_open.width < 512):
-            print("WARNING: Image smaller than 512x512. The spin, flip, or strobe may look weird.")
-        if image_open.format == "PNG":
-            bg_color = (255, 255, 255)
-            rgb_img = rem_trans(image_open, bg_color)
-            return (rgb_img)
-        else:
-            image_open = image_open.convert("P", palette=Image.ADAPTIVE, colors=256)
-            return image_open
-    except IOError:
-        print("Error: Cannot open input file for reading or input file not found.")
-    exit(1)
 
 
 # convert png to rgba image
@@ -274,7 +305,7 @@ def flip_image(c_image):
 # flip the image and save
 def flippity_flip(image, infile, speed, flipfile):
     logo_flip()
-    print("Flipping", infile, "with speed = ", speed)
+    print("Flipping", infile, "with speed = ", str(speed)+".")
     resized = resize_image(image)
     flipped = flip_image(resized)
     try:
@@ -338,32 +369,6 @@ def counterclockwise_strobe(cc_image, color):
     return images
 
 
-# figure out what to do
-def get_manip(picture, what_do, things):
-    # probably a better way to do this
-    if what_do == "spin-c":
-        spin_clockwise(picture, (things.i), (things.s), (things.o))
-    elif what_do == "spin-cc":
-        spin_counterclockwise(picture, (things.i), (things.s), (things.o))
-    elif what_do == "flip":
-        flippity_flip(picture, (things.i), (things.s), (things.o))
-    elif what_do == "strobe-red" and (things.d) == "c":
-        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "red")
-    elif what_do == "strobe-red" and (things.d) == "cc":
-        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "red")
-    elif what_do == "strobe-orange" and (things.d) == "c":
-        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "orange")
-    elif what_do == "strobe-orange" and (things.d) == "cc":
-        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "orange")
-    elif what_do == "strobe-yellow" and (things.d) == "c":
-        strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "yellow")
-    elif what_do == "strobe-yellow" and (things.d) == "cc":
-        strobe_spin_counterclockwise(picture, (things.i), (things.s), (things.o), "yellow")
-    else:
-        print("I don't know what you're trying to do.")
-        exit(1)
-
-
 # main
 def main():
     # get arguments
@@ -376,7 +381,7 @@ def main():
     manip_type = check_type(args.t)
 
     # open the file and get the image
-    img = open_file(args.i)
+    img = open_file(args.i, manip_type)
 
     # probably a better way to do this
     get_manip(img, manip_type, args)
