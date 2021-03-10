@@ -4,7 +4,7 @@ from PIL import Image, ImageOps
 from sys import exit
 import argparse
 
-# python 3 script to convert an image to a 512x512 into a
+# python 3 script to convert an image into a 512x512
 # spinning, flipping, or strobing gif
 # suitable for using as custom emojis in slack
 # Ken Mininger, kmininger@us.ibm.com
