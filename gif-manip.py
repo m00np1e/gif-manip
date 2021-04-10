@@ -4,36 +4,38 @@ from PIL import Image, ImageOps
 from sys import exit
 import argparse
 
-# python 3 script to convert an image into a 512x512
-# spinning, flipping, or strobing gif
-# suitable for using as custom emojis in slack
+# python 3 script to convert an image to a 75x75
+# spinning, bouncing, or strobing gif
+# suitable for use with custom emojis in slack
 # Ken Mininger, kmininger@us.ibm.com
-# December 2020
+# December 2020, April 2021
 
 # usage
 usage = '''
-        Takes an image and resizes to 512x512 (maintaining aspect ratio and quality),
-        applies speed, performs the requested action: flip, spin (clockwise or counterclockwise),
-		strobe red, yellow, or orange (clockwise or counterclockwise), and save as an
-		animated gif file.
+        Takes an image and resizes to 75x75 (maintaining aspect ratio and quality),
+        applies speed, performs the requested action: bounce, spin (clockwise or counterclockwise),
+		strobe red, yellow, or orange (clockwise or counterclockwise), and saves as an
+		animated .gif file.
 		Input and output file are required. Other arguments are optional and if not supplied,
-		will default to a clockwise spinning gif with speed = 100.
-        If image is smaller than 512x512, it will not resize but will spin, flip, or strobe as-is.
+		will default to a clockwise spinning .gif with speed = 50.
+        If image is smaller than 75x75, it will not resize but will spin, flip, or strobe as-is.
 		The -d argument is required, but ignored when flipping.
 
-        EXAMPLE: gif-spin.py -i test.jpg -o test.gif -t flip -s 100 -d c'''
+        EXAMPLE: gif-spin.py -i test.jpg -o test.gif -t spin-c -s 50 -d c'''
 
 
 # arguments
 def check_args():
-    parser = argparse.ArgumentParser(description="Spin, flip, or strobe that GIF!\n\nOnly -i and -o are required.\nIf "
+    parser = argparse.ArgumentParser(description="Spin, bounce, or strobe that GIF!\n\nOnly -i and -o are "
+                                                 "required.\nIf "
                                                  "no other options provided, will default to a clockwise spin with "
-                                                 "speed = 100.", prog="GIF-Manip", usage="%(prog)s "
-                                                                                         "[options]")
-    parser.add_argument("-i", help="Input file - The file you want to flip, spin, or strobe", required=True)
-    parser.add_argument("-o", help="Output file - Must specify .gif", required=True)
-    parser.add_argument("-s", help="Spin speed", type=int, default=100)
-    parser.add_argument("-t", help="Spin, flip, or strobe (flip, spin-c, spin-cc, strobe-red, strobe-orange, "
+                                                 "speed = 50.", prog="GIF-Manip", usage="%(prog)s "
+                                                                                        "[options]")
+    parser.add_argument("-i", help="Input file - The file you want to spin, bounce, or strobe", required=True)
+    parser.add_argument("-o", help="Output file - Must specify .gif extension", required=True)
+    parser.add_argument("-s", help="Spin speed", type=int, default=50)
+    parser.add_argument("-t", help="Spin, bounce, or strobe (bounce, spin-c, spin-cc, strobe-red, "
+                                   "strobe-orange, "
                                    "strobe-yellow)", default="spin-c")
     parser.add_argument("-d", help="Direction (c or cc)", default="c")
     args1 = parser.parse_args()
@@ -66,15 +68,15 @@ def error_check(infile, spinfile, speed, what, direction):
 
 # what are we going to do with this image
 def check_type(type):
-    if type == "flip":
-        return type
-    elif type == "strobe-red":
+    if type == "strobe-red":
         return type
     elif type == "strobe-orange":
         return type
     elif type == "strobe-yellow":
         return type
     elif type == "spin-cc":
+        return type
+    elif type == "bounce":
         return type
     else:
         return type
@@ -84,16 +86,16 @@ def check_type(type):
 def open_file(option, what):
     try:
         logo()
-        if what == "flip":
-            doing = "flipping."
+        if what == "bounce":
+            doing = "bouncing."
         elif (what == "spin-c") or (what == "spin-cc"):
             doing = "spinning."
         else:
             doing = "strobing."
         image_open = Image.open(option, 'r')
         print("Opened", option, "for", doing)
-        if (image_open.height < 512) or (image_open.width < 512):
-            print("WARNING: Image smaller than 512x512. The", (doing[:-1]), "may look weird.")
+        if (image_open.height < 75) or (image_open.width < 75):
+            print("WARNING: Image smaller than 75x75. The", (doing[:-1]), "may look weird.")
         if image_open.format == "PNG":
             bg_color = (255, 255, 255)
             rgb_img = rem_trans(image_open, bg_color)
@@ -113,8 +115,8 @@ def get_manip(picture, what_do, things):
         spin_clockwise(picture, (things.i), (things.s), (things.o))
     elif what_do == "spin-cc":
         spin_counterclockwise(picture, (things.i), (things.s), (things.o))
-    elif what_do == "flip":
-        flippity_flip(picture, (things.i), (things.s), (things.o))
+    elif what_do == "bounce":
+        bouncy(picture, (things.i), (things.s), (things.o))
     elif what_do == "strobe-red" and (things.d) == "c":
         strobe_spin_clockwise(picture, (things.i), (things.s), (things.o), "red")
     elif what_do == "strobe-red" and (things.d) == "cc":
@@ -143,16 +145,6 @@ def logo():
                                       /_/      """)
 
 
-def logo_flip():
-    print("""\
-    _________          __  __          __     ________________
-   / ____/ (_)___     / /_/ /_  ____ _/ /_   / ____/  _/ ____/
-  / /_  / / / __ \   / __/ __ \/ __ `/ __/  / / __ / // /_    
- / __/ / / / /_/ /  / /_/ / / / /_/ / /_   / /_/ // // __/    
-/_/   /_/_/ .___/   \__/_/ /_/\__,_/\__/   \____/___/_/       
-         /_/                                                  """)
-
-
 def logo_spin():
     print("""\
    _____       _          __  __          __     ________________
@@ -173,13 +165,23 @@ def logo_strobe():
                                                                              """)
 
 
-# resize image to 512x512, maintaining aspect ratio and quality
+def logo_bounce():
+    print("""\
+    ____                                 __  __          __     ________________   
+   / __ )____  __  ______  ________     / /_/ /_  ____ _/ /_   / ____/  _/ ____/   
+  / __  / __ \/ / / / __ \/ ___/ _ \   / __/ __ \/ __ `/ __/  / / __ / // /_       
+ / /_/ / /_/ / /_/ / / / / /__/  __/  / /_/ / / / /_/ / /_   / /_/ // // __/       
+/_____/\____/\__,_/_/ /_/\___/\___/   \__/_/ /_/\__,_/\__/   \____/___/_/          
+                                                                             """)
+
+
+# resize image to 75x75, maintaining aspect ratio and quality
 # resize to anything smaller than this and there is quality loss
-# if the image is smaller than 512x512, it will not resize
+# if the image is smaller than 75x75, it will not resize
 # but will spin, flip, or strobe (may look weird)
 def resize_image(r_image):
-    img_height = 512
-    img_width = 512
+    img_height = 75
+    img_width = 75
     if (r_image.height <= img_height) or (r_image.width <= img_width):
         return r_image
     if (r_image.width != img_width) & (r_image.height != img_height):
@@ -189,36 +191,48 @@ def resize_image(r_image):
         return r_image
 
 
+# bounce the image
+def bounce(b_image):
+    images = []
+    degrees = range(1, 360, 40)
+    degrees2 = range(360, 1, -40)
+    for deg in degrees:
+        trans_img = b_image.rotate(deg)
+        images.append(trans_img)
+    for deg2 in degrees2:
+        trans_img = b_image.rotate(deg2)
+        images.append(trans_img)
+    return images
+
+
 # rotate the image clockwise
 def clockwise(c_image):
     images = []
-    images.append(c_image)
-    trans_img1 = c_image.rotate(-90)
-    images.append(trans_img1)
-    trans_img2 = c_image.rotate(-180)
-    images.append(trans_img2)
-    trans_img3 = c_image.rotate(-270)
-    images.append(trans_img3)
+    degrees = -1
+    while degrees >= -360:
+        # images.append(b_image)
+        trans_img = c_image.rotate(degrees)
+        images.append(trans_img)
+        degrees -= 20
     return images
 
 
 # rotate the image counterclockwise
 def counterclockwise(cc_image):
     images = []
-    images.append(cc_image)
-    trans_img1 = cc_image.rotate(90)
-    images.append(trans_img1)
-    trans_img2 = cc_image.rotate(180)
-    images.append(trans_img2)
-    trans_img3 = cc_image.rotate(270)
-    images.append(trans_img3)
+    degrees = 1
+    while degrees <= 360:
+        # images.append(b_image)
+        trans_img = cc_image.rotate(degrees)
+        images.append(trans_img)
+        degrees += 20
     return images
 
 
 # spin the image clockwise and save
 def spin_clockwise(image, infile, speed, spinfile):
     logo_spin()
-    print("Spinning", infile, "clockwise with speed =", str(speed)+".")
+    print("Spinning", infile, "clockwise with speed =", str(speed) + ".")
     resized = resize_image(image)
     clockwised = clockwise(resized)
     try:
@@ -228,14 +242,14 @@ def spin_clockwise(image, infile, speed, spinfile):
                            optimize=True, quality=100)
         print("Spinning GIF created:", spinfile)
     except IOError:
-        print("Error: Cannot open output file for writing")
+        print("Error: Cannot open output file for spinning.")
         exit(1)
 
 
 # spin the image counterclockwise and save
 def spin_counterclockwise(image, infile, speed, spinfile):
     logo_spin()
-    print("Spinning", infile, "counterclockwise with speed =", str(speed)+".")
+    print("Spinning", infile, "counterclockwise with speed =", str(speed) + ".")
     resized = resize_image(image)
     ccwised = counterclockwise(resized)
     try:
@@ -244,7 +258,7 @@ def spin_counterclockwise(image, infile, speed, spinfile):
                         optimize=True, quality=100)
         print("Spinning GIF created: ", spinfile)
     except IOError:
-        print("Error: Cannot open output file for writing")
+        print("Error: Cannot open output file for spinning.")
         exit(1)
 
 
@@ -261,7 +275,7 @@ def strobe_spin_clockwise(image, infile, speed, spinfile, flash):
                            optimize=True, quality=100)
         print("Spinning GIF created:", spinfile)
     except IOError:
-        print("Error: Cannot open output file for writing.")
+        print("Error: Cannot open output file for strobing.")
         exit(1)
 
 
@@ -277,7 +291,7 @@ def strobe_spin_counterclockwise(image, infile, speed, spinfile, flash):
                         optimize=True, quality=100)
         print("Spinning GIF created: ", spinfile)
     except IOError:
-        print("Error: Cannot open output file for writing.")
+        print("Error: Cannot open output file for strobing.")
         exit(1)
 
 
@@ -292,30 +306,20 @@ def rem_trans(img, color_bg):
         return img
 
 
-# flip the image
-def flip_image(c_image):
-    images = []
-    trans_img1 = ImageOps.flip(c_image)
-    images.append(trans_img1)
-    trans_img2 = ImageOps.mirror(c_image)
-    images.append(trans_img2)
-    return images
-
-
-# flip the image and save
-def flippity_flip(image, infile, speed, flipfile):
-    logo_flip()
-    print("Flipping", infile, "with speed = ", str(speed)+".")
+# bounce the image and save
+def bouncy(image, infile, speed, bouncefile):
+    logo_bounce()
+    print("Bouncing", infile, "with speed = ", str(speed) + ".")
     resized = resize_image(image)
-    flipped = flip_image(resized)
+    bounced = bounce(resized)
     try:
-        flipped[0].save(flipfile, 'GIF', save_all=True, append_images=flipped[1:],
+        bounced[0].save(bouncefile, 'GIF', save_all=True, append_images=bounced[1:],
                         duration=speed,
                         loop=0,
                         optimize=True, quality=100)
-        print("Flipping GIF created:", flipfile)
+        print("Bouncing GIF created:", bouncefile)
     except IOError:
-        print("Error: Cannot open output file for writing")
+        print("Error: Cannot open output file for bouncing.")
         exit(1)
 
 
@@ -331,16 +335,14 @@ def clockwise_strobe(c_image, color):
     else:
         print("You specified a weird or unsupported color. Try again.")
         exit(1)
-    images.append(c_image)
-    trans_img1 = c_image.rotate(-90)
-    images.append(trans_img1)
-    images.append(img)
-    trans_img2 = c_image.rotate(-180)
-    images.append(trans_img2)
-    images.append(img)
-    trans_img3 = c_image.rotate(-270)
-    images.append(trans_img3)
-    images.append(img)
+    degrees = -1
+    while degrees >= -360:
+        # images.append(b_image)
+        trans_img = c_image.rotate(degrees)
+        images.append(trans_img)
+        if degrees == -81 or degrees == -181 or degrees == -281 or degrees == -341:
+            images.append(img)
+        degrees -= 20
     return images
 
 
@@ -356,16 +358,14 @@ def counterclockwise_strobe(cc_image, color):
     else:
         print("You specified a weird or unsupported color. Try again.")
         exit(1)
-    images.append(cc_image)
-    trans_img1 = cc_image.rotate(90)
-    images.append(trans_img1)
-    images.append(img)
-    trans_img2 = cc_image.rotate(180)
-    images.append(trans_img2)
-    images.append(img)
-    trans_img3 = cc_image.rotate(270)
-    images.append(trans_img3)
-    images.append(img)
+    degrees = 1
+    while degrees <= 360:
+        # images.append(b_image)
+        trans_img = cc_image.rotate(degrees)
+        images.append(trans_img)
+        if degrees == 81 or degrees == 181 or degrees == 281 or degrees == 341:
+            images.append(img)
+        degrees += 20
     return images
 
 
