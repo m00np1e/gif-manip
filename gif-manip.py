@@ -4,39 +4,44 @@ from PIL import Image, ImageOps
 from sys import exit
 import argparse
 
-# python 3 script to convert an image to a 75x75
+# python 3 script to convert an image to a 80x80
 # spinning, bouncing, or strobing gif
+# also will create 4 cropped tiles
 # suitable for use with custom emojis in slack
 # Ken Mininger, kmininger@us.ibm.com
 # December 2020, April 2021
 
 # usage
 usage = '''
-        Takes an image and resizes to 75x75 (maintaining aspect ratio and quality),
+        Takes an image and resizes to 80x80 (maintaining aspect ratio and quality),
         applies speed, performs the requested action: bounce, spin (clockwise or counterclockwise),
-		strobe red, yellow, or orange (clockwise or counterclockwise), and saves as an
-		animated .gif file.
+		strobe red, yellow, or orange (clockwise or counterclockwise), create 4 tiles, and saves as an
+		animated .gif file or set of 4 tile files.
 		Input and output file are required. Other arguments are optional and if not supplied,
 		will default to a clockwise spinning .gif with speed = 50.
-        If image is smaller than 75x75, it will not resize but will spin, flip, or strobe as-is.
-		The -d argument is required, but ignored when flipping.
+		If create-four is used for -t, all other arguments (except input and output file(s))
+		will be ignored.
+        If image is smaller than 80x80, it will not resize but will spin, flip, bounce, or strobe as-is.
+		The -d argument is required, but ignored when bouncing.
 
-        EXAMPLE: gif-spin.py -i test.jpg -o test.gif -t spin-c -s 50 -d c'''
+        EXAMPLE: gif-manip.py -i test.jpg -o test.gif -t spin-c -s 50 -d c'''
 
 
 # arguments
 def check_args():
-    parser = argparse.ArgumentParser(description="Spin, bounce, or strobe that GIF!\n\nOnly -i and -o are "
-                                                 "required.\nIf "
-                                                 "no other options provided, will default to a clockwise spin with "
-                                                 "speed = 50.", prog="GIF-Manip", usage="%(prog)s "
-                                                                                        "[options]")
-    parser.add_argument("-i", help="Input file - The file you want to spin, bounce, or strobe", required=True)
-    parser.add_argument("-o", help="Output file - Must specify .gif extension", required=True)
+    parser = argparse.ArgumentParser(
+        description="Create 4 tiles, spin, bounce, or strobe that GIF!\n\nOnly -i and -o are "
+                    "required.\nIf "
+                    "no other options provided, will default to a clockwise spin with "
+                    "speed = 50.", prog="GIF-Manip", usage="%(prog)s "
+                                                           "[options]")
+    parser.add_argument("-i", help="Input file - The file you want to create 4 tiles from, spin, bounce, or strobe",
+                        required=True)
+    parser.add_argument("-o", help="Output file - Must specify .gif extension or .jpg for tiles", required=True)
     parser.add_argument("-s", help="Spin speed", type=int, default=50)
-    parser.add_argument("-t", help="Spin, bounce, or strobe (bounce, spin-c, spin-cc, strobe-red, "
+    parser.add_argument("-t", help="Create tiles, spin, bounce, or strobe (bounce, spin-c, spin-cc, strobe-red, "
                                    "strobe-orange, "
-                                   "strobe-yellow)", default="spin-c")
+                                   "strobe-yellow, create-four)", default="spin-c")
     parser.add_argument("-d", help="Direction (c or cc)", default="c")
     args1 = parser.parse_args()
     return (args1)
@@ -78,6 +83,8 @@ def check_type(type):
         return type
     elif type == "bounce":
         return type
+    elif type == "create-four":
+        return type
     else:
         return type
 
@@ -90,12 +97,14 @@ def open_file(option, what):
             doing = "bouncing."
         elif (what == "spin-c") or (what == "spin-cc"):
             doing = "spinning."
+        elif what == "create-four":
+            doing = "tile creation."
         else:
             doing = "strobing."
         image_open = Image.open(option, 'r')
         print("Opened", option, "for", doing)
-        if (image_open.height < 75) or (image_open.width < 75):
-            print("WARNING: Image smaller than 75x75. The", (doing[:-1]), "may look weird.")
+        if (image_open.height < 80) or (image_open.width < 80):
+            print("WARNING: Image smaller than 80x80. The", (doing[:-1]), "may look weird.")
         if image_open.format == "PNG":
             bg_color = (255, 255, 255)
             rgb_img = rem_trans(image_open, bg_color)
@@ -109,12 +118,14 @@ def open_file(option, what):
 
 
 # figure out what to do
+# probably a better way to do this
 def get_manip(picture, what_do, things):
-    # probably a better way to do this
     if what_do == "spin-c":
         spin_clockwise(picture, (things.i), (things.s), (things.o))
     elif what_do == "spin-cc":
         spin_counterclockwise(picture, (things.i), (things.s), (things.o))
+    elif what_do == "create-four":
+        create_four(picture, (things.o))
     elif what_do == "bounce":
         bouncy(picture, (things.i), (things.s), (things.o))
     elif what_do == "strobe-red" and (things.d) == "c":
@@ -175,13 +186,23 @@ def logo_bounce():
                                                                              """)
 
 
-# resize image to 75x75, maintaining aspect ratio and quality
+def logo_tiles():
+    print("""\
+   ______                __          __ __     __  _ __         
+  / ____/_______  ____ _/ /____     / // /    / /_(_) /__  _____
+ / /   / ___/ _ \/ __ `/ __/ _ \   / // /_   / __/ / / _ \/ ___/
+/ /___/ /  /  __/ /_/ / /_/  __/  /__  __/  / /_/ / /  __(__  ) 
+\____/_/   \___/\__,_/\__/\___/     /_/     \__/_/_/\___/____/  
+                                                                """)
+
+
+# resize image to 80x80, maintaining aspect ratio and quality
 # resize to anything smaller than this and there is quality loss
-# if the image is smaller than 75x75, it will not resize
-# but will spin, flip, or strobe (may look weird)
+# if the image is smaller than 80x80, it will not resize
+# but will perform the requested action (may look weird)
 def resize_image(r_image):
-    img_height = 75
-    img_width = 75
+    img_height = 80
+    img_width = 80
     if (r_image.height <= img_height) or (r_image.width <= img_width):
         return r_image
     if (r_image.width != img_width) & (r_image.height != img_height):
@@ -210,7 +231,6 @@ def clockwise(c_image):
     images = []
     degrees = -1
     while degrees >= -360:
-        # images.append(b_image)
         trans_img = c_image.rotate(degrees)
         images.append(trans_img)
         degrees -= 20
@@ -222,11 +242,34 @@ def counterclockwise(cc_image):
     images = []
     degrees = 1
     while degrees <= 360:
-        # images.append(b_image)
         trans_img = cc_image.rotate(degrees)
         images.append(trans_img)
         degrees += 20
     return images
+
+
+# create-four tiles
+def create_four(f_image, tilefile):
+    logo_tiles()
+    resized_jpg = resize_image(f_image)
+    resized_jpg = resized_jpg.convert("RGB")
+    crop_lr = (40, 40, 80, 80)
+    crop_ll = (0, 40, 40, 80)
+    crop_ur = (40, 0, 80, 40)
+    crop_ul = (0, 0, 40, 40)
+    region_lr = resized_jpg.crop(crop_lr)
+    region_ll = resized_jpg.crop(crop_ll)
+    region_ur = resized_jpg.crop(crop_ur)
+    region_ul = resized_jpg.crop(crop_ul)
+    try:
+        region_lr.save("lr_" + tilefile, "jpeg")
+        region_ll.save("ll_" + tilefile, "jpeg")
+        region_ur.save("ur_" + tilefile, "jpeg")
+        region_ul.save("ul_" + tilefile, "jpeg")
+        print("Tiles created. Filenames prepended with lr_, ll_, ur_, ul_")
+    except IOError:
+        print("Error: Cannot open output file(s)")
+        exit(1)
 
 
 # spin the image clockwise and save
@@ -327,17 +370,16 @@ def bouncy(image, infile, speed, bouncefile):
 def clockwise_strobe(c_image, color):
     images = []
     if color == "red":
-        img = Image.new('RGB', (512, 512), (255, 0, 0))
+        img = Image.new('RGB', (80, 80), (255, 0, 0))
     elif color == "yellow":
-        img = Image.new('RGB', (512, 512), (255, 255, 0))
+        img = Image.new('RGB', (80, 80), (255, 255, 0))
     elif color == "orange":
-        img = Image.new('RGB', (512, 512), (255, 140, 0))
+        img = Image.new('RGB', (80, 80), (255, 140, 0))
     else:
         print("You specified a weird or unsupported color. Try again.")
         exit(1)
     degrees = -1
     while degrees >= -360:
-        # images.append(b_image)
         trans_img = c_image.rotate(degrees)
         images.append(trans_img)
         if degrees == -81 or degrees == -181 or degrees == -281 or degrees == -341:
@@ -350,17 +392,16 @@ def clockwise_strobe(c_image, color):
 def counterclockwise_strobe(cc_image, color):
     images = []
     if color == "red":
-        img = Image.new('RGB', (512, 512), (255, 0, 0))
+        img = Image.new('RGB', (80, 80), (255, 0, 0))
     elif color == "yellow":
-        img = Image.new('RGB', (512, 512), (255, 255, 0))
+        img = Image.new('RGB', (80, 80), (255, 255, 0))
     elif color == "orange":
-        img = Image.new('RGB', (512, 512), (255, 140, 0))
+        img = Image.new('RGB', (80, 80), (255, 140, 0))
     else:
         print("You specified a weird or unsupported color. Try again.")
         exit(1)
     degrees = 1
     while degrees <= 360:
-        # images.append(b_image)
         trans_img = cc_image.rotate(degrees)
         images.append(trans_img)
         if degrees == 81 or degrees == 181 or degrees == 281 or degrees == 341:
@@ -377,7 +418,7 @@ def main():
     # ensure all options provided
     error_check(args.i, args.o, args.s, args.t, args.d)
 
-    # get the action (spin, flip, strobe)
+    # get the action (spin, strobe, bounce, tile)
     manip_type = check_type(args.t)
 
     # open the file and get the image
