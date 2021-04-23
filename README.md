@@ -32,7 +32,7 @@ spin-c (spins the image clockwise)\
 spin-cc (spins the image counterclockwise)\
 strobe-red (strobes the image red with direction supplied in -d)\
 strobe-yellow (strobes the image yellow with direction supplied in -d)\
-strobe-orange (strobes the image orange with direction supplied in -d)
+strobe-orange (strobes the image orange with direction supplied in -d)\
 create-four (creates 4 tiles, upper left & right and lower left & right)
 
 Requires: https://github.com/python-pillow/Pillow
