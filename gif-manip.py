@@ -254,8 +254,6 @@ def create_four(f_image, tilefile):
     width, height = f_image.size
     q1 = int(width / 2)
     q2 = int(height / 2)
-    print(width, height)
-    print(q1, q2)
     tiled_jpg = f_image.convert("RGB")
     crop_lr = (q1, q2, width, height)
     crop_ll = (0, q2, q1, height)
