@@ -11,7 +11,7 @@ All-in-one Python 3 script for creating annoying spinning, bouncing, or strobing
 
 Suitable for Slack (or whatever else).
 
-Code cobbled together in an hour. There may be bugs. And there's probably a better way to do some of this things this script does. So no lols.
+Code originally cobbled together in an hour. What started off as a silly 20 line script has turned into a 400 line beast. There may be bugs. And there's probably a better way to do some of this things this script does. So no lols.
 
 Takes an image (file) as input, converts the image to a 80x80 thumbnail, spins, bounces, or strobes, applies speed and rotation, and saves the spinning or bouncing GIF as output (file). Can also create 4 tiles (upper left, right & lower left, right) from an image.
 
@@ -34,5 +34,7 @@ strobe-red (strobes the image red with direction supplied in -d)\
 strobe-yellow (strobes the image yellow with direction supplied in -d)\
 strobe-orange (strobes the image orange with direction supplied in -d)\
 create-four (creates 4 tiles, upper left & right and lower left & right)
+
+If you choose an option where direction and/or speed doesn't matter, those inputs are required but ignored.
 
 Requires: https://github.com/python-pillow/Pillow
