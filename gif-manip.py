@@ -7,24 +7,27 @@ import argparse
 # python 3 script to convert an image to a 80x80
 # spinning, bouncing, or strobing gif
 # also will create 4 cropped tiles
-# suitable for use with custom emojis in slack
+# or just save the image as an 80x80 .gif file
+# suitable for use with custom emotes in slack
 # Ken Mininger, kmininger@us.ibm.com
-# December 2020, April 2021
+# June 2021
 
 # usage
 usage = '''
         Takes an image and resizes to 80x80 (maintaining aspect ratio and quality),
         applies speed, performs the requested action: bounce, spin (clockwise or counterclockwise),
-		strobe red, yellow, or orange (clockwise or counterclockwise), create 4 tiles, and saves as an
+		strobe red, yellow, or orange (clockwise or counterclockwise), or create 4 tiles, and saves as an
 		animated .gif file or set of 4 tile files.
 		Input and output file are required. Other arguments are optional and if not supplied,
-		will default to a clockwise spinning .gif with speed = 50.
+		will save the image as an 80x80 .gif file.
 		If create-four is used for -t, all other arguments (except input and output file(s))
 		will be ignored.
-        If image is smaller than 80x80, it will not resize but will spin, flip, bounce, or strobe as-is.
-		The -d argument is required, but ignored when bouncing.
+        If image is smaller than 80x80, it will not resize but will perform the requested action as-is.
+		The -d argument is ignored when bouncing.
 
-        EXAMPLE: gif-manip.py -i test.jpg -o test.gif -t spin-c -s 50 -d c'''
+        EXAMPLE (spinning .gif): gif-manip.py -i test.jpg -o test.gif -t spin-c -s 50 -d c
+        EXAMPLE (save emote only): gif-manip.py -i test.jpg -o test.gif
+        '''
 
 
 # arguments
@@ -32,8 +35,7 @@ def check_args():
     parser = argparse.ArgumentParser(
         description="Create 4 tiles, spin, bounce, or strobe that GIF!\n\nOnly -i and -o are "
                     "required.\nIf "
-                    "no other options provided, will default to a clockwise spin with "
-                    "speed = 50.", prog="GIF-Manip", usage="%(prog)s "
+                    "no other options provided, will just save the file as an 80x80 .gif file.", prog="GIF-Manip", usage="%(prog)s "
                                                            "[options]")
     parser.add_argument("-i", help="Input file - The file you want to create 4 tiles from, spin, bounce, or strobe",
                         required=True)
@@ -48,7 +50,7 @@ def check_args():
 
 
 # check that arguments are supplied
-def error_check(infile, spinfile, speed, what, direction):
+def error_check(infile, spinfile):
     if not infile:
         logo()
         print("Input file not provided: use -i")
@@ -56,18 +58,6 @@ def error_check(infile, spinfile, speed, what, direction):
     if not spinfile:
         logo()
         print("Output file not provided: use -o")
-        exit(1)
-    if not speed:
-        logo()
-        print("Give me some speed: use -s")
-        exit(1)
-    if not what:
-        logo()
-        print("What type yo: use -t")
-        exit(1)
-    if not direction:
-        logo()
-        print("Need direction: use -d")
         exit(1)
 
 
@@ -99,8 +89,10 @@ def open_file(option, what):
             doing = "spinning."
         elif what == "create-four":
             doing = "tile creation."
-        else:
+        elif what == "strobe-red" or what == "strobe-yellow" or what == "strobe-orange":
             doing = "strobing."
+        else:
+            doing = "emote creating."
         image_open = Image.open(option, 'r')
         print("Opened", option, "for", doing)
         if (image_open.height < 80) or (image_open.width < 80):
@@ -368,6 +360,18 @@ def bouncy(image, infile, speed, bouncefile):
         exit(1)
 
 
+# just save the emote
+def emote(image, emote, outfile):
+    print("Creating an emote from", outfile)
+    resized = resize_image(image)
+    try:
+        resized.save(emote, 'GIF', save_all=True, optimize=True, quality=100)
+        print("Emote created:", emote)
+    except IOError:
+        print("Error: Cannot open output file for writing.")
+        exit(1)
+
+
 # rotate the image clockwise and apply the strobe color
 def clockwise_strobe(c_image, color):
     images = []
@@ -412,13 +416,25 @@ def counterclockwise_strobe(cc_image, color):
     return images
 
 
+def create_emote(image_file, emote_file):
+    what = "emote"
+    emote_image = open_file(image_file, what)
+    emote(emote_image, emote_file, image_file)
+    exit(1)
+
+
 # main
 def main():
     # get arguments
     (args) = check_args()
 
-    # ensure all options provided
-    error_check(args.i, args.o, args.s, args.t, args.d)
+    # ensure all required options are provided
+    error_check(args.i, args.o)
+
+    # just save the picture as an emote and exit
+    if not (args.s) or (args.t) or (args.d):
+        create_emote(args.i, args.o)
+        exit(1)
 
     # get the action (spin, strobe, bounce, tile)
     manip_type = check_type(args.t)
