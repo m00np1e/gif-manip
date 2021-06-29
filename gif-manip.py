@@ -35,22 +35,23 @@ def check_args():
     parser = argparse.ArgumentParser(
         description="Create 4 tiles, spin, bounce, or strobe that GIF!\n\nOnly -i and -o are "
                     "required.\nIf "
-                    "no other options provided, will just save the file as an 80x80 .gif file.", prog="GIF-Manip", usage="%(prog)s "
-                                                           "[options]")
+                    "no other options provided, will just save the file as an 80x80 .gif file.", prog="GIF-Manip",
+        usage="%(prog)s "
+              "[options]")
     parser.add_argument("-i", help="Input file - The file you want to create 4 tiles from, spin, bounce, or strobe",
                         required=True)
     parser.add_argument("-o", help="Output file - Must specify .gif extension or .jpg for tiles", required=True)
-    parser.add_argument("-s", help="Spin speed", type=int, default=50)
+    parser.add_argument("-s", help="Spin speed", type=int)
     parser.add_argument("-t", help="Create tiles, spin, bounce, or strobe (bounce, spin-c, spin-cc, strobe-red, "
                                    "strobe-orange, "
-                                   "strobe-yellow, create-four)", default="spin-c")
-    parser.add_argument("-d", help="Direction (c or cc)", default="c")
+                                   "strobe-yellow, create-four)")
+    parser.add_argument("-d", help="Direction (c or cc)")
     args1 = parser.parse_args()
     return (args1)
 
 
-# check that arguments are supplied
-def error_check(infile, spinfile):
+# check that arguments are supplied and just save as an emote if necessary
+def error_check(infile, spinfile, speed, type, dir):
     if not infile:
         logo()
         print("Input file not provided: use -i")
@@ -58,6 +59,9 @@ def error_check(infile, spinfile):
     if not spinfile:
         logo()
         print("Output file not provided: use -o")
+        exit(1)
+    if not speed or not type or not dir:
+        create_emote(infile, spinfile)
         exit(1)
 
 
@@ -74,6 +78,8 @@ def check_type(type):
     elif type == "bounce":
         return type
     elif type == "create-four":
+        return type
+    elif type == "spin-c":
         return type
     else:
         return type
@@ -429,12 +435,9 @@ def main():
     (args) = check_args()
 
     # ensure all required options are provided
-    error_check(args.i, args.o)
-
-    # just save the picture as an emote and exit
-    if not (args.s) or (args.t) or (args.d):
-        create_emote(args.i, args.o)
-        exit(1)
+    # if all arguments not supplied, will save as
+    # an 80x80 emote
+    error_check(args.i, args.o, args.s, args.t, args.d)
 
     # get the action (spin, strobe, bounce, tile)
     manip_type = check_type(args.t)
