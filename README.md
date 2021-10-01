@@ -32,4 +32,9 @@ cc - spins the image counterclockwise\
 f - creates 4 tiles (upper left & right and lower left & right)
 e - just save as an emote
 
+EXAMPLE:\
+Create a clockwise spinning GIF from a JPG file:\
+<br>
+```gif-manip.py -i file.jpg -o spinning-gif.gif -s 50 -d c```
+
 Requires: https://github.com/python-pillow/Pillow
