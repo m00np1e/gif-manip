@@ -7,13 +7,13 @@
                                       /_/      
 ```
 
-All-in-one Python 3 script for creating annoying spinning or bouncing GIFs. Can also create 4 tiles (upper left & right, lower left & right) from an image, or just save the image as an 120x120 emote.
+All-in-one Python 3 script for creating annoying spinning or bouncing GIFs. Can also create 4 tiles (upper left & right, lower left & right) from an image, or just save the image as an 80x80 emote.
 
 Suitable for Slack (or whatever else).
 
-Takes an image (file) as input, converts the image to a 120x120 thumbnail, spins or bounces, applies speed and rotation, and saves the spinning or bouncing GIF as output (file). Can also create 4 tiles (upper left, right & lower left, right) from an image, or just save the image as an 120x120 emote.
+Takes an image (file) as input, converts the image to a 80x80 thumbnail, spins or bounces, applies speed and rotation, and saves the spinning or bouncing GIF as output (file). Can also create 4 tiles (upper left, right & lower left, right) from an image, or just save the image as an 80x80 emote.
 
-If the image is smaller than 120x120, it will work but may look weird.
+If the image is smaller than 80x80, it will work but may look weird.
 
 USAGE:
 
