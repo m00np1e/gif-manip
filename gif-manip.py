@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 # python 3 script to manipulate an image for use in slack, etc.
-# basically just makes a 120x120 emote from an image
+# basically just makes a 80x80 emote from an image
 # this can:
 # spin the image clockwise or counterclockwise
 # bounce the image
 # just save as an emote
-# create 4 tiles from the image
+# create 4 80x80 tiles from the image
 # Ken Mininger, kmininger@us.ibm.com
 # October 2021
 
@@ -18,12 +18,13 @@ import argparse
 # check the arguments
 def check_args():
     parser = argparse.ArgumentParser(
-        description="Manipulates an image and saves as specified GIF file.", prog="GIF-Manip",
+        description="Manipulates an image and saves as specified GIF file (or whatever).", prog="GIF-Manip",
         usage="%(prog)s "
               "[options]")
     parser.add_argument("-i", help="Input file - The file you want to work with.",
                         required=True)
-    parser.add_argument("-o", help="Output file - If you don't add the .gif extension, I'll add it for you.",
+    parser.add_argument("-o", help="Output file - If you don't add the .gif extension, I'll add it for you (except "
+                                   "for the four tile thing).",
                         required=True)
     parser.add_argument("-s", help="Spin speed (50 is a good clean spin, 20 is turbo spin).", type=int, required=True)
     parser.add_argument("-d", help="Direction or task (c=clockwise spin, cc=counterclockwise spin, b=bounce, "
@@ -32,7 +33,7 @@ def check_args():
     return (args1)
 
 
-# check that arguments are supplied and just save as an emote if necessary
+# check that arguments are supplied
 def error_check(infile, spinfile, speed, dir):
     if not infile:
         print("Input file not provided: use -i")
@@ -50,6 +51,8 @@ def error_check(infile, spinfile, speed, dir):
 
 # open image file and process
 def open_file(option, what):
+    ideal_width = 80
+    ideal_height = 80
     try:
         if what == "b":
             doing = "bouncing."
@@ -61,8 +64,8 @@ def open_file(option, what):
             doing = "emote creating."
         image_open = Image.open(option, 'r')
         print("Opened", option, "for", doing)
-        if (image_open.height < 80) or (image_open.width < 80):
-            print("WARNING: Image smaller than 80x80. The", (doing[:-1]), "may look weird.")
+        if (image_open.height < ideal_height) or (image_open.width < ideal_width):
+            print("WARNING: Image smaller than ", ideal_height, " x ", ideal_width, (doing[:-1]), "may look weird.")
         if image_open.format == "PNG":
             bg_color = (255, 255, 255)
             rgb_img = rem_trans(image_open, bg_color)
@@ -88,16 +91,12 @@ def rem_trans(img, color_bg):
 
 # resize image
 def resize_image(r_image):
-    img_height = 120
-    img_width = 120
-    reduce_percent = .4
+    img_height = 80
+    img_width = 80
     if (r_image.height <= img_height) or (r_image.width <= img_width):
         return r_image
     if (r_image.width != img_width) & (r_image.height != img_height):
-        # r2_image = ImageOps.fit(r_image, [img_width, img_height], Image.ANTIALIAS)
-        new_image_height = int(reduce_percent * r_image.height)
-        new_image_width = int(reduce_percent * r_image.width)
-        r2_image = ImageOps.fit(r_image, [new_image_width, new_image_height], Image.ANTIALIAS)
+        r2_image = ImageOps.fit(r_image, [img_width, img_height], Image.ANTIALIAS)
         return r2_image
     else:
         return r_image
@@ -164,6 +163,7 @@ def create_four(f_image, tilefile):
         exit(1)
 
 
+# spin the image clockwise and save
 def spin_clockwise(image, infile, speed, spinfile):
     print("Spinning", infile, "clockwise with speed =", str(speed) + ".")
     resized = resize_image(image)
@@ -212,7 +212,7 @@ def bouncy(image, infile, speed, bouncefile):
 
 # just save the emote
 def emote(image, outfile):
-    print("Creating an emote from", outfile)
+    print("Saving the file as an emote.")
     resized = resize_image(image)
     try:
         resized.save(outfile, 'GIF', save_all=True, optimize=True, quality=100)
