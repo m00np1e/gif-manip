@@ -24,7 +24,7 @@ def check_args():
     parser.add_argument("-i", help="Input file - The file you want to work with.",
                         required=True)
     parser.add_argument("-o", help="Output file - If you don't add the .gif extension, I'll add it for you (except "
-                                   "for the four tile thing).",
+                                   "for the four tile thing where it'll be .jpgs).",
                         required=True)
     parser.add_argument("-s", help="Spin speed (50 is a good clean spin, 20 is turbo spin).", type=int, required=True)
     parser.add_argument("-d", help="Direction or task (c=clockwise spin, cc=counterclockwise spin, b=bounce, "
