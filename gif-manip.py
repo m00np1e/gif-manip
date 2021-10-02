@@ -18,7 +18,7 @@ import argparse
 # check the arguments
 def check_args():
     parser = argparse.ArgumentParser(
-        description="Manipulates an image and saves as specified GIF file (or whatever).", prog="GIF-Manip",
+        description="Manipulates an image and saves as specified GIF file (or whatever).", prog="gif-manip",
         usage="%(prog)s "
               "[options]")
     parser.add_argument("-i", help="Input file - The file you want to work with.",
@@ -26,7 +26,8 @@ def check_args():
     parser.add_argument("-o", help="Output file - If you don't add the .gif extension, I'll add it for you (except "
                                    "for the four tile thing where it'll be .jpgs).",
                         required=True)
-    parser.add_argument("-s", help="Spin speed (50 is a good clean spin, 20 is turbo spin).", type=int, required=True)
+    parser.add_argument("-s", help="Spin/bounce speed (50 is a good clean spin, 20 is turbo spin). Option not needed "
+                                   "with 'e' argument and is ignored if supplied.", type=int)
     parser.add_argument("-d", help="Direction or task (c=clockwise spin, cc=counterclockwise spin, b=bounce, "
                                    "f=four tiles, or e=just save as an emote).", required=True)
     args1 = parser.parse_args()
@@ -41,8 +42,8 @@ def error_check(infile, spinfile, speed, dir):
     if not spinfile:
         print("Output file not provided: use -o")
         exit(1)
-    if not speed:
-        print("Need some speed: use -s")
+    if not speed and (dir == "c" or dir == "cc" or dir == "b"):
+        print("Need some speed with this option: use -s")
         exit(1)
     if not dir:
         print("What do you want to do: use -d")
@@ -65,7 +66,7 @@ def open_file(option, what):
         image_open = Image.open(option, 'r')
         print("Opened", option, "for", doing)
         if (image_open.height < ideal_height) or (image_open.width < ideal_width):
-            print("WARNING: Image smaller than ", ideal_height, " x ", ideal_width, (doing[:-1]), "may look weird.")
+            print("WARNING: Image smaller than", ideal_height, "x", ideal_width, ",", (doing[:-1]), "may look weird.")
         if image_open.format == "PNG":
             bg_color = (255, 255, 255)
             rgb_img = rem_trans(image_open, bg_color)
