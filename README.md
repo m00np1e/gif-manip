@@ -29,7 +29,7 @@ Where [do-something] is one of:
 b - bounces the image\
 c - spins the image clockwise\
 cc - spins the image counterclockwise\
-f - creates 4 tiles (upper left & right and lower left & right)
+f - creates 4 tiles (upper left & right and lower left & right)\
 e - just save as an emote
 
 EXAMPLE:\
