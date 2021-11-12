@@ -9,7 +9,7 @@
 # create 4 80x80 tiles from the image
 # Ken Mininger, kmininger@us.ibm.com
 # October 2021
-
+import PIL.Image
 from PIL import Image, ImageOps
 from sys import exit
 import argparse
@@ -29,7 +29,7 @@ def check_args():
     parser.add_argument("-s", help="Spin/bounce speed (50 is a good clean spin, 20 is turbo spin). Option not needed "
                                    "with 'e' argument and is ignored if supplied.", type=int)
     parser.add_argument("-d", help="Direction or task (c=clockwise spin, cc=counterclockwise spin, b=bounce, "
-                                   "f=four tiles, or e=just save as an emote).", required=True)
+                                   "f=four tiles, p=flip, or e=just save as an emote).", required=True)
     args1 = parser.parse_args()
     return (args1)
 
@@ -38,6 +38,9 @@ def check_args():
 def error_check(infile, spinfile, speed, dir):
     if not infile:
         print("Input file not provided: use -i")
+        exit(1)
+    if not os.path.isfile(infile):
+        print("Input file not found")
         exit(1)
     if not spinfile:
         print("Output file not provided: use -o")
@@ -61,6 +64,8 @@ def open_file(option, what):
             doing = "spinning."
         elif what == "f":
             doing = "tile creation."
+        elif what == "p":
+            doing = "flipping."
         else:
             doing = "emote creating."
         image_open = Image.open(option, 'r')
@@ -139,6 +144,26 @@ def bounce(b_image):
     return images
 
 
+# flip the image
+def flip_it(flip_image):
+    images = []
+    trans_img = flip_image.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+    images.append(trans_img)
+    trans_img = ImageOps.flip(trans_img)
+    images.append(trans_img)
+    trans_img = flip_image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+    images.append(trans_img)
+    # degrees = range(1, 360, 40)
+    # degrees2 = range(360, 1, -40)
+    # for deg in degrees:
+    #    trans_img = b_image.rotate(deg)
+    #    images.append(trans_img)
+    # for deg2 in degrees2:
+    #    trans_img = b_image.rotate(deg2)
+    #    images.append(trans_img)
+    return images
+
+
 # create-four tiles
 def create_four(f_image, tilefile):
     width, height = f_image.size
@@ -211,6 +236,22 @@ def bouncy(image, infile, speed, bouncefile):
         exit(1)
 
 
+# flip and save
+def flippy(image, infile, speed, flipfile):
+    print("Flipping", infile, "with speed = ", str(speed) + ".")
+    resized = resize_image(image)
+    flipped = flip_it(resized)
+    try:
+        flipped[0].save(flipfile, 'GIF', save_all=True, append_images=flipped[1:],
+                        duration=speed,
+                        loop=0,
+                        optimize=True, quality=100)
+        print("Flipping GIF created:", flipfile)
+    except IOError:
+        print("Error: Cannot open output file for flipping.")
+        exit(1)
+
+
 # just save the emote
 def emote(image, outfile):
     print("Saving the file as an emote.")
@@ -250,6 +291,8 @@ def get_manip(picture, what_do, outfile, things):
         bouncy(picture, (things.i), (things.s), (outfile))
     elif what_do == "e":
         create_emote(picture, outfile)
+    elif what_do == "p":
+        flippy(picture, (things.i), (things.s), (outfile))
     else:
         print("I don't know what you're trying to do.")
         exit(1)
