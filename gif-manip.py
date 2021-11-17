@@ -13,6 +13,7 @@ import PIL.Image
 from PIL import Image, ImageOps
 from sys import exit
 import argparse
+import os
 
 
 # check the arguments
